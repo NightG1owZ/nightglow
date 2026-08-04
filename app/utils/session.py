@@ -1,7 +1,7 @@
 from typing import Optional
 
 import redis.asyncio as redis
-
+import json
 from app.config import settings
 
 redis_client: Optional[redis.Redis] = None
@@ -18,3 +18,33 @@ async def close_redis():
     global redis_client
     if redis_client:
         await redis_client.close()
+
+def _get_session_key(session_id: str) -> str:
+    return f"session:{session_id}"
+
+async def get_session(session_id: str) -> Optional[dict]:
+    if not redis_client:
+        return None
+    key = _get_session_key(session_id)
+    data = await redis_client.get(key)
+    if data:
+        return json.loads(data)
+    return None
+
+async def set_session(session_id: str, data: dict, expire: Optional[int] = None):
+    if not redis_client:
+        return
+
+    key = _get_session_key(session_id)
+    expire_time = expire or settings.session_max_age
+    await redis_client.setex(
+        key,
+        expire_time,
+        json.dumps(data)
+    )
+
+async def remove_session(session_id: str):
+    if not redis_client:
+        return
+    key = _get_session_key(session_id)
+    await redis_client.delete(key)

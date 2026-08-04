@@ -16,6 +16,8 @@ class ErrorCode(Enum):
     USER_NOT_EXIST = (40401, "用户不存在")
     USER_ALREADY_EXIST = (40402, "用户已存在")
     PASSWORD_ERROR = (40103, "密码错误")
+    USER_DISABLED = (40104, "账号已被禁用")
+    LOGIN_ERROR = (40105, "账号或密码错误")
 
     def __init__(self, code: int, message: str):
         self.code = code

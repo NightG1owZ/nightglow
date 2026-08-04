@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Optional
+from typing import Generic, TypeVar, Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -29,3 +29,26 @@ class PageRequest(BaseModel):
 class DeleteRequest(BaseModel):
     id: int = Field(..., description="Delete Id")
 
+
+class BatchDeleteRequest(BaseModel):
+    """批量删除请求"""
+    ids: List[int] = Field(..., min_length=1, description="ID 列表")
+
+
+class IdRequest(BaseModel):
+    id: int = Field(..., description="ID")
+
+
+class PageResponse(BaseModel, Generic[T]):
+    """分页响应"""
+    records: List[T]
+    total: int
+    current: int
+    page_size: int = Field(..., alias="pageSize")
+
+    class Config:
+        populate_by_name = True
+
+    @classmethod
+    def of(cls, records: List[T], total: int, current: int, page_size: int) -> "PageResponse[T]":
+        return cls(records=records, total=total, current=current, page_size=page_size)

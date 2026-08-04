@@ -3,7 +3,6 @@ from fastapi import APIRouter
 from app.schemas.common import BaseResponse
 
 router = APIRouter(
-    prefix="/health",
     tags=["health"]
 )
 
