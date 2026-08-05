@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from databases import Database
 
 from app.database import get_db
@@ -9,6 +9,7 @@ from app.schemas.article import (
     ArticleAddRequest, ArticleUpdateRequest, ArticleQueryRequest, ArticleVO,
 )
 from app.services.article_service import ArticleService
+from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter(prefix="/article", tags=["文章管理"])
 
@@ -27,11 +28,13 @@ async def list(
 @router.get("/{article_id}", response_model=BaseResponse[ArticleVO])
 async def get(
     article_id: int,
+    req: Request,
     db: Database = Depends(get_db),
 ):
-    """查询单个文章"""
+    """查询单个文章（同时记录浏览并使浏览量 +1）"""
     service = ArticleService(db)
     vo = await service.get(article_id)
+    await service.record_view(article_id, get_client_ip(req), get_user_agent(req))
     return BaseResponse.success(data=vo)
 
 

@@ -7,15 +7,13 @@ from app.schemas.common import PageRequest
 
 
 class CommentAddRequest(BaseModel):
-    """新增评论请求"""
+    """新增评论请求（IP/User-Agent 由服务端采集）"""
     article_id: int = Field(..., alias="articleId", description="文章ID")
     parent_id: int = Field(default=0, alias="parentId", description="父评论ID")
     nickname: str = Field(..., max_length=50, description="评论昵称")
     email: Optional[str] = Field(None, max_length=100, description="邮箱")
     avatar: Optional[str] = Field(None, max_length=500, description="头像")
     content: str = Field(..., max_length=1000, description="评论内容")
-    ip: Optional[str] = Field(None, max_length=50, description="IP地址")
-    user_agent: Optional[str] = Field(None, max_length=500, alias="userAgent", description="浏览器信息")
 
     class Config:
         populate_by_name = True

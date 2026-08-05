@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple, List, Any, Dict
+from typing import Tuple, List, Any, Dict, Optional
 
 from databases import Database
 from sqlalchemy import select, func, and_, insert, update, delete
@@ -7,6 +7,7 @@ from sqlalchemy import select, func, and_, insert, update, delete
 from app.exceptions import throw_if, ErrorCode
 from app.models.article import Article
 from app.models.article_tag import ArticleTag
+from app.models.article_view import ArticleView
 from app.schemas.article import (
     ArticleAddRequest, ArticleUpdateRequest, ArticleQueryRequest, ArticleVO,
 )
@@ -24,6 +25,15 @@ class ArticleService:
     async def get(self, article_id: int) -> ArticleVO:
         row = await self._get_row(article_id)
         return ArticleVO(**dict(row))
+
+    async def record_view(self, article_id: int, ip: Optional[str], user_agent: Optional[str]) -> None:
+        """记录浏览并使浏览量 +1"""
+        await self.db.execute(
+            insert(ArticleView).values(article_id=article_id, ip=ip, user_agent=user_agent)
+        )
+        await self.db.execute(
+            update(Article).where(Article.id == article_id).values(view_count=Article.view_count + 1)
+        )
 
     async def add(self, request: ArticleAddRequest, author_id: int) -> int:
         publish_time = request.publish_time

@@ -7,10 +7,16 @@ from app.schemas.common import PageRequest
 
 
 class ArticleLikeAddRequest(BaseModel):
-    """新增文章点赞请求"""
+    """新增文章点赞请求（IP 由服务端采集）"""
     article_id: int = Field(..., alias="articleId", description="文章ID")
-    ip: Optional[str] = Field(None, description="访问IP")
-    user_id: Optional[int] = Field(None, alias="userId", description="登录用户ID")
+
+    class Config:
+        populate_by_name = True
+
+
+class ArticleLikeCancelRequest(BaseModel):
+    """取消文章点赞请求（按 IP 取消）"""
+    article_id: int = Field(..., alias="articleId", description="文章ID")
 
     class Config:
         populate_by_name = True

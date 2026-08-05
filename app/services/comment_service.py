@@ -1,4 +1,4 @@
-from typing import Tuple, List, Any, Dict
+from typing import Tuple, List, Any, Dict, Optional
 
 from databases import Database
 from sqlalchemy import select, func, and_, insert, update, delete
@@ -23,7 +23,7 @@ class CommentService:
         row = await self._get_row(comment_id)
         return CommentVO(**dict(row))
 
-    async def add(self, request: CommentAddRequest) -> int:
+    async def add(self, request: CommentAddRequest, ip: Optional[str], user_agent: Optional[str]) -> int:
         comment_id = await self.db.execute(
             insert(Comment).values(
                 article_id=request.article_id,
@@ -32,8 +32,8 @@ class CommentService:
                 email=request.email,
                 avatar=request.avatar,
                 content=request.content,
-                ip=request.ip,
-                user_agent=request.user_agent,
+                ip=ip,
+                user_agent=user_agent,
                 status=1,
             )
         )

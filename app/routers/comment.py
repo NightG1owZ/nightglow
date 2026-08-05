@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from databases import Database
 
 from app.database import get_db
@@ -9,6 +9,7 @@ from app.schemas.comment import (
     CommentAddRequest, CommentUpdateRequest, CommentQueryRequest, CommentVO,
 )
 from app.services.comment_service import CommentService
+from app.utils.request import get_client_ip, get_user_agent
 
 router = APIRouter(prefix="/comment", tags=["评论管理"])
 
@@ -38,11 +39,12 @@ async def get(
 @router.post("", response_model=BaseResponse[int])
 async def add(
     request: CommentAddRequest,
+    req: Request,
     db: Database = Depends(get_db),
 ):
-    """新增评论"""
+    """新增评论（自动采集 IP 与 User-Agent）"""
     service = CommentService(db)
-    comment_id = await service.add(request)
+    comment_id = await service.add(request, ip=get_client_ip(req), user_agent=get_user_agent(req))
     return BaseResponse.success(data=comment_id, message="新增成功")
 
 
