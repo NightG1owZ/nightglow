@@ -11,6 +11,7 @@ class UserRegisterRequest(BaseModel):
     username: str = Field(..., min_length=4, max_length=50, description="用户名")
     password: str = Field(..., min_length=8, max_length=128, alias="password", description="密码")
     check_password: str = Field(..., min_length=8, max_length=128, alias="checkPassword", description="确认密码")
+    nickname: Optional[str] = Field(None, max_length=50, description="昵称（可选，默认用户{username}）")
 
     class Config:
         populate_by_name = True
