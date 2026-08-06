@@ -204,12 +204,8 @@ onMounted(() => {
             ></textarea>
           </div>
           <div class="flex justify-between">
-            <span style="color: #909399; font-size: 12px">评论将公开显示</span>
-            <button
-              class="btn btn-primary"
-              :disabled="commentSubmitting"
-              @click="submitComment"
-            >
+            <span style="color: var(--text-tertiary); font-size: 12px">评论将公开显示</span>
+            <button class="btn btn-primary" :disabled="commentSubmitting" @click="submitComment">
               {{ commentSubmitting ? '提交中...' : '发表评论' }}
             </button>
           </div>
@@ -228,9 +224,11 @@ onMounted(() => {
                 :src="c.avatar"
                 class="comment-avatar"
                 alt="avatar"
-                onerror="this.style.display='none'"
+                onerror="this.style.display = 'none'"
               />
-              <div v-else class="comment-avatar fallback">{{ (c.nickname || '匿').slice(0, 1) }}</div>
+              <div v-else class="comment-avatar fallback">
+                {{ (c.nickname || '匿').slice(0, 1) }}
+              </div>
               <div class="comment-meta">
                 <div class="comment-name">{{ c.nickname || '匿名用户' }}</div>
                 <div class="comment-time">{{ formatDate(c.createTime) }}</div>
@@ -244,7 +242,12 @@ onMounted(() => {
           :current="commentPage"
           :page-size="commentSize"
           :total="commentTotal"
-          @change="(p) => { commentPage = p; loadComments() }"
+          @change="
+            (p) => {
+              commentPage = p
+              loadComments()
+            }
+          "
         />
       </section>
     </template>
@@ -255,13 +258,13 @@ onMounted(() => {
 .title {
   font-size: 26px;
   font-weight: 700;
-  color: #1f2d3d;
+  color: var(--text-primary);
   line-height: 1.35;
 }
 
 .meta {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .cover {
@@ -274,7 +277,7 @@ onMounted(() => {
 .content {
   font-size: 15px;
   line-height: 1.85;
-  color: #2c3e50;
+  color: var(--text-regular);
 }
 
 .content-line {
@@ -285,13 +288,13 @@ onMounted(() => {
 
 .action-bar {
   padding-top: 16px;
-  border-top: 1px solid #f2f6fc;
+  border-top: 1px solid var(--border-lighter);
 }
 
 .section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 16px;
 }
 
@@ -301,7 +304,7 @@ onMounted(() => {
 
 .comment-item {
   padding: 16px 0;
-  border-bottom: 1px solid #f2f6fc;
+  border-bottom: 1px solid var(--border-lighter);
 }
 
 .comment-item:last-child {
@@ -324,7 +327,7 @@ onMounted(() => {
 }
 
 .comment-avatar.fallback {
-  background: linear-gradient(135deg, #4a90d9, #67a7e0);
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
   color: #fff;
   display: flex;
   align-items: center;
@@ -336,17 +339,17 @@ onMounted(() => {
 .comment-name {
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .comment-time {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .comment-body {
   font-size: 14px;
-  color: #303133;
+  color: var(--text-primary);
   line-height: 1.7;
   padding-left: 48px;
 }
@@ -355,11 +358,11 @@ onMounted(() => {
 .empty {
   text-align: center;
   padding: 40px 20px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .error-box {
-  color: #f56c6c;
+  color: var(--danger);
 }
 
 @media (max-width: 640px) {

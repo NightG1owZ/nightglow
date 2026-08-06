@@ -1,10 +1,23 @@
-<!DOCTYPE html>
-<html lang="">
+<!doctype html>
+<html lang="zh-CN">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NightGlow Blog</title>
+    <script>
+      // 防止主题闪烁：在首屏渲染前应用已保存的主题
+      ;(function () {
+        try {
+          var t = localStorage.getItem('blog_theme') || 'system'
+          var resolved = t
+          if (t === 'system') {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          }
+          document.documentElement.setAttribute('data-theme', resolved)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

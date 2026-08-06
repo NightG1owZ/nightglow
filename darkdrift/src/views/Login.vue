@@ -95,16 +95,18 @@ async function onSubmit() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(135deg, #eef4fb 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--bg-auth-grad-1) 0%, var(--bg-auth-grad-2) 100%);
+  transition: background 0.4s ease;
 }
 
 .auth-card {
   width: 100%;
   max-width: 400px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 40px 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-auth);
+  border: 1px solid var(--border-lighter);
 }
 
 .auth-header {
@@ -115,20 +117,20 @@ async function onSubmit() {
 .logo {
   font-size: 28px;
   font-weight: 700;
-  color: #4a90d9;
+  color: var(--accent);
   margin-bottom: 16px;
 }
 
 .auth-title {
   font-size: 22px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
 .auth-subtitle {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .btn-block {
@@ -142,11 +144,11 @@ async function onSubmit() {
   margin-top: 20px;
   text-align: center;
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
 }
 
 .auth-footer .divider {
   margin: 0 6px;
-  color: #dcdfe6;
+  color: var(--border-base);
 }
 </style>

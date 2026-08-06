@@ -75,12 +75,15 @@ async function handleLogout() {
 
 <style scoped>
 .site-header {
-  background: #fff;
-  border-bottom: 1px solid #ebeef5;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-light);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .header-inner {
@@ -105,7 +108,7 @@ async function handleLogout() {
 .logo-text {
   font-size: 18px;
   font-weight: 700;
-  color: #1f2d3d;
+  color: var(--text-primary);
   letter-spacing: 0.5px;
 }
 
@@ -123,20 +126,22 @@ async function handleLogout() {
   padding: 8px 14px;
   border-radius: 6px;
   font-size: 14px;
-  color: #606266;
-  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   text-decoration: none;
 }
 
 .nav-item:hover {
-  background: #f5f7fa;
-  color: #4a90d9;
+  background: var(--bg-subtle);
+  color: var(--accent);
   text-decoration: none;
 }
 
 .nav-item.active {
-  background: #ecf5ff;
-  color: #4a90d9;
+  background: var(--accent-bg);
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -163,14 +168,14 @@ async function handleLogout() {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #ebeef5;
+  border: 2px solid var(--border-light);
 }
 
 .avatar-fallback {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4a90d9, #67a7e0);
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
   color: #fff;
   display: flex;
   align-items: center;
@@ -181,7 +186,7 @@ async function handleLogout() {
 
 .user-nickname {
   font-size: 14px;
-  color: #303133;
+  color: var(--text-primary);
   font-weight: 500;
   max-width: 120px;
   overflow: hidden;

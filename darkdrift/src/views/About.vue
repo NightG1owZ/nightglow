@@ -105,13 +105,13 @@ onMounted(loadConfigs)
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 0;
 }
 
 .divider {
   height: 1px;
-  background: #f2f6fc;
+  background: var(--border-lighter);
   margin: 16px 0 24px;
 }
 
@@ -122,13 +122,13 @@ onMounted(loadConfigs)
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
 .about-content {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-secondary);
   line-height: 1.85;
 }
 
@@ -139,16 +139,19 @@ onMounted(loadConfigs)
 }
 
 .tech-item {
-  background: #f8fafc;
+  background: var(--bg-subtle);
   border-radius: 8px;
   padding: 20px 16px;
   text-align: center;
-  transition: all 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.3s ease;
 }
 
 .tech-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-hover);
 }
 
 .tech-icon {
@@ -159,13 +162,13 @@ onMounted(loadConfigs)
 .tech-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 .tech-desc {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .keywords-wrap {
@@ -183,7 +186,7 @@ onMounted(loadConfigs)
 
 .feature-list li {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-secondary);
   line-height: 2;
 }
 </style>

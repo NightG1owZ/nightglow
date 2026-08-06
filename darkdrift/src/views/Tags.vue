@@ -33,36 +33,19 @@ async function load() {
   }
 }
 
-interface PaletteItem {
-  bg: string
-  color: string
-  border: string
-}
-
-function randomColor(seed: number): PaletteItem {
-  const palette: PaletteItem[] = [
-    { bg: '#ecf5ff', color: '#4a90d9', border: '#d9ecff' },
-    { bg: '#f0f9eb', color: '#67c23a', border: '#e1f3d8' },
-    { bg: '#fdf6ec', color: '#e6a23c', border: '#faecd8' },
-    { bg: '#fef0f0', color: '#f56c6c', border: '#fde2e2' },
-    { bg: '#f4f4f5', color: '#909399', border: '#e9e9eb' },
-    { bg: '#f0ebfb', color: '#8e6ddc', border: '#dccff6' },
-  ]
-  return palette[seed % palette.length] as PaletteItem
-}
+const TAG_PALETTE = ['#4a90d9', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#8e6ddc']
 
 function getTagStyle(t: TagVO, i: number) {
-  const palette = randomColor(i)
-  const customColor: string = t.color || ''
+  const color: string = t.color || TAG_PALETTE[i % TAG_PALETTE.length] || '#4a90d9'
   const count = t.article_count || 0
   return {
-    background: customColor ? `${customColor}22` : palette.bg,
-    color: customColor || palette.color,
-    borderColor: customColor ? `${customColor}66` : palette.border,
+    // 半透明背景与边框，使其在各主题下均能自然融合
+    background: `${color}22`,
+    color,
+    borderColor: `${color}66`,
     fontSize: Math.max(12, Math.min(20, 12 + Math.log2(count + 1) * 2)) + 'px',
     padding:
-      Math.max(4, Math.min(10, 4 + count)) + 'px ' +
-      Math.max(10, Math.min(18, 10 + count)) + 'px',
+      Math.max(4, Math.min(10, 4 + count)) + 'px ' + Math.max(10, Math.min(18, 10 + count)) + 'px',
   }
 }
 
@@ -108,7 +91,12 @@ onMounted(load)
         :current="current"
         :page-size="pageSize"
         :total="total"
-        @change="(p) => { current = p; load() }"
+        @change="
+          (p) => {
+            current = p
+            load()
+          }
+        "
       />
     </div>
   </div>
@@ -118,12 +106,12 @@ onMounted(load)
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  color: #1f2d3d;
+  color: var(--text-primary);
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-tertiary);
   margin-top: 4px;
 }
 
@@ -143,14 +131,16 @@ onMounted(load)
   border-radius: 20px;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   cursor: pointer;
 }
 
 .tag-item:hover {
   transform: scale(1.08);
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-hover);
 }
 
 .tag-count {
@@ -162,10 +152,10 @@ onMounted(load)
 .empty {
   text-align: center;
   padding: 40px 20px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .error-box {
-  color: #f56c6c;
+  color: var(--danger);
 }
 </style>

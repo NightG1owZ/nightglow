@@ -24,21 +24,23 @@ const router = useRouter()
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef7 100%);
+  background: linear-gradient(135deg, var(--bg-404-grad-1) 0%, var(--bg-404-grad-2) 100%);
+  transition: background 0.4s ease;
 }
 
 .notfound-card {
   text-align: center;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 60px 48px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-auth);
+  border: 1px solid var(--border-lighter);
 }
 
 .notfound-code {
   font-size: 96px;
   font-weight: 800;
-  background: linear-gradient(135deg, #4a90d9, #8e6ddc);
+  background: linear-gradient(135deg, var(--accent), #8e6ddc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -49,12 +51,12 @@ const router = useRouter()
 .notfound-title {
   font-size: 24px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .notfound-desc {
   font-size: 14px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 </style>

@@ -70,26 +70,29 @@ import AppHeader from '@/components/AppHeader.vue'
 .sidebar-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
 .sidebar-desc {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
 .site-footer {
-  background: #fff;
-  border-top: 1px solid #ebeef5;
+  background: var(--bg-header);
+  border-top: 1px solid var(--border-light);
   padding: 20px 0;
   margin-top: auto;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .footer-inner {
   text-align: center;
-  color: #909399;
+  color: var(--text-tertiary);
   font-size: 13px;
 }
 

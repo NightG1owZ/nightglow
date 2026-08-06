@@ -66,6 +66,12 @@ function onSearch() {
   syncUrlAndLoad()
 }
 
+function resetSearch() {
+  keyword.value = ''
+  categoryId.value = undefined
+  onSearch()
+}
+
 function onSelectCategory(id?: number) {
   categoryId.value = id
   current.value = 1
@@ -126,13 +132,7 @@ watch(
           />
         </div>
         <button class="btn btn-primary" :disabled="loading" @click="onSearch">搜索</button>
-        <button
-          class="btn btn-outline"
-          :disabled="loading"
-          @click="keyword = ''; categoryId = undefined; onSearch()"
-        >
-          重置
-        </button>
+        <button class="btn btn-outline" :disabled="loading" @click="resetSearch">重置</button>
       </div>
 
       <div class="category-filter mt-16" v-if="categories.length > 0">
@@ -189,7 +189,16 @@ watch(
               <span>👁️ {{ item.viewCount || 0 }}</span>
               <span>❤️ {{ item.likeCount || 0 }}</span>
               <span>💬 {{ item.commentCount || 0 }}</span>
-              <span v-if="item.isTop" class="tag" style="background: #fef0f0; color: #f56c6c; border-color: #fde2e2">置顶</span>
+              <span
+                v-if="item.isTop"
+                class="tag"
+                style="
+                  background: var(--danger-bg);
+                  color: var(--danger);
+                  border-color: var(--danger-border);
+                "
+                >置顶</span
+              >
               <span v-if="!item.isOriginal" class="tag">转载</span>
             </div>
           </div>
@@ -208,25 +217,22 @@ watch(
 
 <style scoped>
 .search-card {
-  background: #fff;
+  background: var(--bg-card);
 }
 
 .category-filter {
   padding-top: 8px;
-  border-top: 1px solid #f2f6fc;
+  border-top: 1px solid var(--border-lighter);
 }
 
 .article-item {
   cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.2s ease;
   margin-bottom: 16px;
 }
 
 .article-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-hover);
 }
 
 .cover-wrap {
@@ -234,7 +240,7 @@ watch(
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
-  background: #f5f7fa;
+  background: var(--bg-subtle);
 }
 
 .cover-img {
@@ -247,14 +253,14 @@ watch(
 .article-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
   margin-bottom: 8px;
   line-height: 1.4;
 }
 
 .article-summary {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-secondary);
   line-height: 1.7;
   margin-bottom: 12px;
   display: -webkit-box;
@@ -265,19 +271,19 @@ watch(
 
 .article-meta {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .loading,
 .empty {
   text-align: center;
   padding: 40px 20px;
-  color: #909399;
+  color: var(--text-tertiary);
   font-size: 14px;
 }
 
 .error-box {
-  color: #f56c6c;
+  color: var(--danger);
   font-size: 14px;
 }
 

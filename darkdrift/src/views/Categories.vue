@@ -96,12 +96,12 @@ onMounted(load)
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  color: #1f2d3d;
+  color: var(--text-primary);
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-tertiary);
   margin-top: 4px;
 }
 
@@ -113,25 +113,24 @@ onMounted(load)
 
 .category-card {
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
 }
 
 .category-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-hover);
 }
 
 .category-name {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--text-primary);
 }
 
 .category-desc {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   line-height: 1.6;
   flex: 1;
 }
@@ -141,13 +140,13 @@ onMounted(load)
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #909399;
+  color: var(--text-tertiary);
   padding-top: 12px;
-  border-top: 1px solid #f2f6fc;
+  border-top: 1px solid var(--border-lighter);
 }
 
 .view-link {
-  color: #4a90d9;
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -155,10 +154,10 @@ onMounted(load)
 .empty {
   text-align: center;
   padding: 40px 20px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 
 .error-box {
-  color: #f56c6c;
+  color: var(--danger);
 }
 </style>
