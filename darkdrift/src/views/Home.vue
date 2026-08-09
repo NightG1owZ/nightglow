@@ -259,11 +259,8 @@ onBeforeUnmount(() => {
           <div class="flex-1 article-main">
             <h2 class="article-title">{{ item.title }}</h2>
             <p v-if="item.summary" class="article-summary">{{ item.summary }}</p>
-            <div class="article-meta flex gap-16 wrap">
-              <span>📅 {{ formatDate(item.publishTime || item.createTime) }}</span>
-              <span>👁️ {{ item.viewCount || 0 }}</span>
-              <span>❤️ {{ item.likeCount || 0 }}</span>
-              <span>💬 {{ item.commentCount || 0 }}</span>
+            <div class="article-meta flex gap-16 wrap align-items-center">
+              <span>{{ formatDate(item.publishTime || item.createTime) }}</span>
               <span
                 v-if="item.isTop"
                 class="tag"

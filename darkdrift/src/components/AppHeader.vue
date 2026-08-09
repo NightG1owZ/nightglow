@@ -13,10 +13,10 @@ const { isLoggedIn, nickname, avatar, user } = storeToRefs(userStore)
 const canManage = computed(() => !!user.value && user.value.id === 1)
 
 const navItems = [
-  { path: '/', label: '首页', icon: '🏠' },
-  { path: '/categories', label: '分类', icon: '📁' },
-  { path: '/tags', label: '标签', icon: '🏷️' },
-  { path: '/about', label: '关于', icon: 'ℹ️' },
+  { path: '/', label: '首页' },
+  { path: '/categories', label: '分类' },
+  { path: '/tags', label: '标签' },
+  { path: '/about', label: '关于' },
 ]
 
 function isActive(path: string) {
@@ -46,7 +46,6 @@ async function handleLogout() {
   <header class="site-header">
     <div class="container header-inner">
       <div class="logo" @click="router.push('/')">
-        <span class="logo-icon">🌙</span>
         <span class="logo-text">NightGlow Blog</span>
       </div>
 
@@ -58,7 +57,6 @@ async function handleLogout() {
           class="nav-item"
           :class="{ active: isActive(item.path) }"
         >
-          <span class="nav-icon">{{ item.icon }}</span>
           <span class="nav-label">{{ item.label }}</span>
         </router-link>
       </nav>
@@ -66,7 +64,7 @@ async function handleLogout() {
       <div class="user-area">
         <template v-if="isLoggedIn">
           <button v-if="canManage" class="btn btn-primary btn-sm" @click="goManager">
-            🛠️
+            管理
           </button>
           <div class="user-info">
             <img v-if="avatar" :src="avatar" class="avatar" alt="avatar" />
@@ -107,13 +105,8 @@ async function handleLogout() {
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
   cursor: pointer;
   flex-shrink: 0;
-}
-
-.logo-icon {
-  font-size: 24px;
 }
 
 .logo-text {
@@ -154,10 +147,6 @@ async function handleLogout() {
   background: var(--accent-bg);
   color: var(--accent);
   font-weight: 500;
-}
-
-.nav-icon {
-  font-size: 14px;
 }
 
 .user-area {
@@ -207,21 +196,22 @@ async function handleLogout() {
 
 @media (max-width: 768px) {
   .header-inner {
-    gap: 8px;
+    gap: 6px;
     padding: 0 12px;
     height: 56px;
   }
 
   .logo-text {
-    display: none;
+    font-size: 15px;
   }
 
-  .nav-label {
-    display: none;
+  .nav {
+    gap: 2px;
   }
 
   .nav-item {
-    padding: 6px 10px;
+    padding: 6px 8px;
+    font-size: 13px;
   }
 
   .user-nickname {
