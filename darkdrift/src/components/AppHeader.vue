@@ -9,8 +9,8 @@ const route = useRoute()
 const userStore = useUserStore()
 const { isLoggedIn, nickname, avatar, user } = storeToRefs(userStore)
 
-// 仅当前登录用户 id=1 时显示「新增文章」入口
-const canCreateArticle = computed(() => !!user.value && user.value.id === 1)
+// 仅当前登录用户 id=1 时显示「文章管理」入口
+const canManage = computed(() => !!user.value && user.value.id === 1)
 
 const navItems = [
   { path: '/', label: '首页', icon: '🏠' },
@@ -32,8 +32,8 @@ function goRegister() {
   router.push('/register')
 }
 
-function goCreateArticle() {
-  router.push('/article/new')
+function goManager() {
+  router.push('/manager')
 }
 
 async function handleLogout() {
@@ -65,12 +65,8 @@ async function handleLogout() {
 
       <div class="user-area">
         <template v-if="isLoggedIn">
-          <button
-            v-if="canCreateArticle"
-            class="btn btn-primary btn-sm"
-            @click="goCreateArticle"
-          >
-            ✍️ 新增文章
+          <button v-if="canManage" class="btn btn-primary btn-sm" @click="goManager">
+            🛠️
           </button>
           <div class="user-info">
             <img v-if="avatar" :src="avatar" class="avatar" alt="avatar" />

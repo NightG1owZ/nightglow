@@ -48,6 +48,12 @@ const router = createRouter({
       ],
     },
     {
+      path: '/manager',
+      name: 'Manager',
+      component: () => import('@/views/ManagerView.vue'),
+      meta: { title: '文章管理', manager: true },
+    },
+    {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/Login.vue'),
@@ -72,9 +78,9 @@ const router = createRouter({
   },
 })
 
-// 全局前置守卫：新增文章页面仅对 id=1 的登录用户开放
+// 全局前置守卫：管理页面与新增文章页面仅对 id=1 的登录用户开放
 router.beforeEach((to) => {
-  if (to.name === 'ArticleCreate') {
+  if (to.name === 'ArticleCreate' || to.meta?.manager) {
     const userStore = useUserStore()
     if (!userStore.isLoggedIn || userStore.user?.id !== 1) {
       return { name: 'Login', query: { redirect: to.fullPath } }

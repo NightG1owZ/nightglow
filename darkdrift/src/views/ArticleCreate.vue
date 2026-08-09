@@ -1,15 +1,29 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { addArticle } from '@/api/article'
+import { addArticle, updateArticle, getArticle } from '@/api/article'
 import { listCategory } from '@/api/category'
 import { listTag } from '@/api/tag'
 import type { CategoryVO, TagVO } from '@/types'
+
+const props = defineProps<{
+  /** 传入则进入编辑模式 */
+  articleId?: number
+  /** 嵌入模式：隐藏返回按钮，成功后 emit 事件而不跳转 */
+  embedded?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'success', articleId: number, status: number): void
+  (e: 'cancel'): void
+}>()
 
 const router = useRouter()
 
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
+
+const isEdit = computed(() => props.articleId !== undefined && props.articleId > 0)
 
 const form = reactive({
   title: '',
@@ -31,11 +45,13 @@ const errors = reactive({
 })
 
 const submitting = ref(false)
+const loadingArticle = ref(false)
 const globalError = ref('')
 const success = ref('')
 
 const contentLength = computed(() => form.content.length)
 const summaryLength = computed(() => form.summary.length)
+const pageTitle = computed(() => (isEdit.value ? '编辑文章' : '新增文章'))
 
 async function loadOptions() {
   try {
@@ -47,6 +63,28 @@ async function loadOptions() {
     tags.value = tagRes.records || []
   } catch {
     // 选项加载失败不阻塞表单
+  }
+}
+
+async function loadArticle() {
+  if (!props.articleId) return
+  loadingArticle.value = true
+  globalError.value = ''
+  try {
+    const a = await getArticle(props.articleId)
+    form.title = a.title || ''
+    form.summary = a.summary || ''
+    form.cover = a.cover || ''
+    form.content = a.content || ''
+    form.categoryId = a.categoryId
+    form.isTop = a.isTop ?? 0
+    form.isOriginal = a.isOriginal ?? 1
+    // 编辑模式下标签关联需通过文章标签关联接口查询；为简化，此处留空交由提交时全量覆盖
+    form.tagIds = []
+  } catch (e: any) {
+    globalError.value = e?.message || '加载文章失败'
+  } finally {
+    loadingArticle.value = false
   }
 }
 
@@ -91,21 +129,37 @@ async function submit(status: number) {
   if (!validate()) return
   submitting.value = true
   try {
-    const id = await addArticle({
-      title: form.title.trim(),
-      summary: form.summary.trim() || undefined,
-      cover: form.cover.trim() || undefined,
-      content: form.content,
-      categoryId: form.categoryId,
-      status,
-      isTop: form.isTop,
-      isOriginal: form.isOriginal,
-      tagIds: form.tagIds,
-    })
-    success.value = status === 1 ? '发布成功！即将跳转文章详情...' : '草稿已保存！即将跳转文章详情...'
-    setTimeout(() => {
-      router.replace(`/article/${id}`)
-    }, 1000)
+    if (isEdit.value && props.articleId) {
+      await updateArticle({
+        id: props.articleId,
+        title: form.title.trim(),
+        summary: form.summary.trim() || undefined,
+        cover: form.cover.trim() || undefined,
+        content: form.content,
+        categoryId: form.categoryId,
+        status,
+        isTop: form.isTop,
+        isOriginal: form.isOriginal,
+        tagIds: form.tagIds,
+      })
+      const id = props.articleId
+      success.value = status === 1 ? '更新成功！文章已发布' : '更新成功！草稿已保存'
+      finishAfter(id, status)
+    } else {
+      const id = await addArticle({
+        title: form.title.trim(),
+        summary: form.summary.trim() || undefined,
+        cover: form.cover.trim() || undefined,
+        content: form.content,
+        categoryId: form.categoryId,
+        status,
+        isTop: form.isTop,
+        isOriginal: form.isOriginal,
+        tagIds: form.tagIds,
+      })
+      success.value = status === 1 ? '发布成功！' : '草稿已保存！'
+      finishAfter(id, status)
+    }
   } catch (e: any) {
     globalError.value = e?.message || '保存失败'
   } finally {
@@ -113,28 +167,56 @@ async function submit(status: number) {
   }
 }
 
+function finishAfter(id: number, status: number) {
+  if (props.embedded) {
+    emit('success', id, status)
+    return
+  }
+  setTimeout(() => {
+    router.replace(`/article/${id}`)
+  }, 1000)
+}
+
 function goBack() {
+  if (props.embedded) {
+    emit('cancel')
+    return
+  }
   if (window.history.length > 1) router.back()
   else router.push('/')
 }
 
+watch(
+  () => props.articleId,
+  (val) => {
+    if (val) loadArticle()
+  },
+)
+
 onMounted(() => {
   loadOptions()
+  if (props.articleId) loadArticle()
 })
 </script>
 
 <template>
   <div class="create-page">
-    <button class="btn btn-outline btn-sm mb-16" @click="goBack">← 返回</button>
+    <button v-if="!embedded" class="btn btn-outline btn-sm mb-16" @click="goBack">
+      ← 返回
+    </button>
 
     <div class="card">
-      <h1 class="page-title">新增文章</h1>
-      <p class="page-subtitle">填写以下信息发布一篇新文章</p>
+      <div v-if="loadingArticle" class="loading">加载文章中...</div>
+      <template v-else>
+        <h1 class="page-title">{{ pageTitle }}</h1>
+        <p class="page-subtitle">
+          {{ isEdit ? '修改文章信息后点击保存' : '填写以下信息发布一篇新文章' }}
+        </p>
 
-      <div v-if="globalError" class="banner banner-error">⚠️ {{ globalError }}</div>
-      <div v-if="success" class="banner banner-success">✅ {{ success }}</div>
+        <div v-if="globalError" class="banner banner-error">⚠️ {{ globalError }}</div>
+        <div v-if="success" class="banner banner-success">✅ {{ success }}</div>
 
-      <div class="form-item">
+        <div class="form-item">
         <label class="form-label">文章标题 <span class="required">*</span></label>
         <input
           v-model="form.title"
@@ -243,7 +325,7 @@ onMounted(() => {
           :disabled="submitting"
           @click="submit(1)"
         >
-          {{ submitting ? '提交中...' : '✍️ 发布文章' }}
+          {{ submitting ? '提交中...' : isEdit ? '💾 保存并发布' : '✍️ 发布文章' }}
         </button>
         <button
           class="btn btn-outline"
@@ -257,11 +339,18 @@ onMounted(() => {
           取消
         </button>
       </div>
+      </template>
     </div>
   </div>
 </template>
 
 <style scoped>
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+}
+
 .page-title {
   font-size: 22px;
   font-weight: 700;
