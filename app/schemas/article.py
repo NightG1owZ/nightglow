@@ -61,9 +61,9 @@ class ArticleVO(BaseModel):
     status: int
     is_top: int = Field(0, alias="isTop")
     is_original: int = Field(1, alias="isOriginal")
-    view_count: int = Field(0, alias="viewCount")
-    like_count: int = Field(0, alias="likeCount")
-    comment_count: int = Field(0, alias="commentCount")
+    view_count: Optional[int] = Field(0, alias="viewCount")
+    like_count: Optional[int] = Field(0, alias="likeCount")
+    comment_count: Optional[int] = Field(0, alias="commentCount")
     publish_time: Optional[datetime] = Field(None, alias="publishTime")
     create_time: datetime = Field(..., alias="createTime")
     update_time: datetime = Field(..., alias="updateTime")

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores/user'
@@ -6,7 +7,10 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const { isLoggedIn, nickname, avatar } = storeToRefs(userStore)
+const { isLoggedIn, nickname, avatar, user } = storeToRefs(userStore)
+
+// 仅当前登录用户 id=1 时显示「新增文章」入口
+const canCreateArticle = computed(() => !!user.value && user.value.id === 1)
 
 const navItems = [
   { path: '/', label: '首页', icon: '🏠' },
@@ -26,6 +30,10 @@ function goLogin() {
 
 function goRegister() {
   router.push('/register')
+}
+
+function goCreateArticle() {
+  router.push('/article/new')
 }
 
 async function handleLogout() {
@@ -57,6 +65,13 @@ async function handleLogout() {
 
       <div class="user-area">
         <template v-if="isLoggedIn">
+          <button
+            v-if="canCreateArticle"
+            class="btn btn-primary btn-sm"
+            @click="goCreateArticle"
+          >
+            ✍️ 新增文章
+          </button>
           <div class="user-info">
             <img v-if="avatar" :src="avatar" class="avatar" alt="avatar" />
             <div v-else class="avatar-fallback">{{ nickname.slice(0, 1) }}</div>

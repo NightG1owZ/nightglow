@@ -5,6 +5,7 @@ import { getArticle, likeArticle, cancelLikeArticle } from '@/api/article'
 import { addComment, listComment } from '@/api/comment'
 import type { ArticleVO, CommentVO } from '@/types'
 import AppPagination from '@/components/AppPagination.vue'
+import { renderMarkdown } from '@/utils/markdown'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +13,11 @@ const router = useRouter()
 const articleId = computed(() => parseInt(String(route.params.id), 10) || 0)
 
 const article = ref<ArticleVO | null>(null)
+
+// 将文章正文 Markdown 渲染为已净化的 HTML
+const renderedContent = computed(() =>
+  article.value ? renderMarkdown(article.value.content || '') : '',
+)
 const loading = ref(false)
 const error = ref('')
 const liked = ref(false)
@@ -162,11 +168,7 @@ onMounted(() => {
           <span v-if="article.isTop" class="tag tag-sm">置顶</span>
         </div>
         <img v-if="article.cover" :src="article.cover" class="cover mt-16" alt="cover" />
-        <div class="content mt-24">
-          <p v-for="(line, i) in article.content.split('\n')" :key="i" class="content-line">
-            {{ line }}
-          </p>
-        </div>
+        <div class="content markdown-body mt-24" v-html="renderedContent"></div>
 
         <div class="action-bar mt-24">
           <button
@@ -278,12 +280,248 @@ onMounted(() => {
   font-size: 15px;
   line-height: 1.85;
   color: var(--text-regular);
+  word-break: break-word;
 }
 
-.content-line {
-  margin-bottom: 12px;
-  white-space: pre-wrap;
-  word-break: break-word;
+/* ========== Markdown 正文样式 ========== */
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4),
+.markdown-body :deep(h5),
+.markdown-body :deep(h6) {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+}
+
+.markdown-body :deep(h1) {
+  font-size: 1.7em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.markdown-body :deep(h2) {
+  font-size: 1.45em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.markdown-body :deep(h3) {
+  font-size: 1.25em;
+}
+
+.markdown-body :deep(h4) {
+  font-size: 1.1em;
+}
+
+.markdown-body :deep(h5) {
+  font-size: 1em;
+}
+
+.markdown-body :deep(h6) {
+  font-size: 0.9em;
+  color: var(--text-tertiary);
+}
+
+.markdown-body :deep(p) {
+  margin: 0 0 1em;
+}
+
+.markdown-body :deep(strong) {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.markdown-body :deep(em) {
+  font-style: italic;
+}
+
+.markdown-body :deep(del) {
+  color: var(--text-tertiary);
+}
+
+.markdown-body :deep(a) {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.markdown-body :deep(a:hover) {
+  color: var(--accent-hover);
+  border-bottom-color: var(--accent-hover);
+  text-decoration: none;
+}
+
+.markdown-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+  margin: 1em auto;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  margin: 0 0 1em;
+  padding-left: 1.8em;
+}
+
+.markdown-body :deep(li) {
+  margin: 0.25em 0;
+}
+
+.markdown-body :deep(li > ul),
+.markdown-body :deep(li > ol) {
+  margin: 0.25em 0;
+}
+
+.markdown-body :deep(blockquote) {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--accent);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-radius: 0 4px 4px 0;
+}
+
+.markdown-body :deep(blockquote > p:last-child) {
+  margin-bottom: 0;
+}
+
+.markdown-body :deep(hr) {
+  margin: 1.6em 0;
+  border: none;
+  border-top: 2px solid var(--border-light);
+}
+
+/* 行内代码 */
+.markdown-body :deep(code) {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.88em;
+  padding: 0.2em 0.4em;
+  background: var(--bg-subtle);
+  border-radius: 3px;
+  color: var(--danger);
+}
+
+/* 代码块 */
+.markdown-body :deep(pre) {
+  margin: 1em 0;
+  padding: 14px 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.55;
+}
+
+.markdown-body :deep(pre code) {
+  font-size: 0.85em;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  color: var(--text-regular);
+  white-space: pre;
+}
+
+/* GFM 表格 */
+.markdown-body :deep(table) {
+  width: 100%;
+  margin: 1em 0;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+
+.markdown-body :deep(thead) {
+  background: var(--bg-subtle);
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  padding: 8px 12px;
+  border: 1px solid var(--border-base);
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-body :deep(tbody tr:nth-child(2n)) {
+  background: var(--bg-subtle);
+}
+
+/* 任务列表复选框 */
+.markdown-body :deep(input[type='checkbox']) {
+  margin-right: 0.4em;
+  vertical-align: middle;
+}
+
+/* ========== highlight.js 语法高亮配色（随主题切换） ========== */
+.markdown-body :deep(.hljs) {
+  color: var(--text-regular);
+  background: transparent;
+}
+
+.markdown-body :deep(.hljs-comment),
+.markdown-body :deep(.hljs-quote) {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.markdown-body :deep(.hljs-keyword),
+.markdown-body :deep(.hljs-selector-tag),
+.markdown-body :deep(.hljs-built_in),
+.markdown-body :deep(.hljs-name),
+.markdown-body :deep(.hljs-tag) {
+  color: var(--accent);
+}
+
+.markdown-body :deep(.hljs-string),
+.markdown-body :deep(.hljs-title),
+.markdown-body :deep(.hljs-section),
+.markdown-body :deep(.hljs-attribute),
+.markdown-body :deep(.hljs-literal),
+.markdown-body :deep(.hljs-template-tag),
+.markdown-body :deep(.hljs-template-variable),
+.markdown-body :deep(.hljs-type),
+.markdown-body :deep(.hljs-addition) {
+  color: var(--success);
+}
+
+.markdown-body :deep(.hljs-number),
+.markdown-body :deep(.hljs-symbol),
+.markdown-body :deep(.hljs-bullet),
+.markdown-body :deep(.hljs-link),
+.markdown-body :deep(.hljs-meta),
+.markdown-body :deep(.hljs-selector-id),
+.markdown-body :deep(.hljs-selector-class) {
+  color: var(--warning);
+}
+
+.markdown-body :deep(.hljs-attr),
+.markdown-body :deep(.hljs-variable),
+.markdown-body :deep(.hljs-property),
+.markdown-body :deep(.hljs-params) {
+  color: var(--text-primary);
+}
+
+.markdown-body :deep(.hljs-deletion) {
+  color: var(--danger);
+}
+
+.markdown-body :deep(.hljs-emphasis) {
+  font-style: italic;
+}
+
+.markdown-body :deep(.hljs-strong) {
+  font-weight: 700;
 }
 
 .action-bar {
@@ -371,6 +609,26 @@ onMounted(() => {
   }
   .comment-body {
     padding-left: 0;
+  }
+  .markdown-body {
+    font-size: 14px;
+  }
+  .markdown-body :deep(h1) {
+    font-size: 1.5em;
+  }
+  .markdown-body :deep(h2) {
+    font-size: 1.3em;
+  }
+  .markdown-body :deep(pre) {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .markdown-body :deep(ul),
+  .markdown-body :deep(ol) {
+    padding-left: 1.4em;
+  }
+  .markdown-body :deep(table) {
+    font-size: 13px;
   }
 }
 </style>
