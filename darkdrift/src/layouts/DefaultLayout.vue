@@ -14,16 +14,6 @@ import AppHeader from '@/components/AppHeader.vue'
             </transition>
           </router-view>
         </div>
-        <aside class="sidebar hide-sm">
-          <slot name="sidebar">
-            <div class="card sidebar-card">
-              <h3 class="sidebar-title">🌙 NightGlow</h3>
-              <p class="sidebar-desc">
-                欢迎访问我的个人博客，这里会分享技术文章与生活感悟。
-              </p>
-            </div>
-          </slot>
-        </aside>
       </div>
     </main>
     <footer class="site-footer">
@@ -47,37 +37,12 @@ import AppHeader from '@/components/AppHeader.vue'
 }
 
 .main-inner {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
+  display: block;
 }
 
 .content {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-}
-
-.sidebar {
-  width: 300px;
-  flex-shrink: 0;
-}
-
-.sidebar-card {
-  position: sticky;
-  top: 88px;
-}
-
-.sidebar-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-}
-
-.sidebar-desc {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.7;
 }
 
 .site-footer {
@@ -106,28 +71,9 @@ import AppHeader from '@/components/AppHeader.vue'
   opacity: 0;
 }
 
-@media (max-width: 992px) {
-  .sidebar {
-    width: 260px;
-  }
-}
-
 @media (max-width: 768px) {
   .main {
     padding: 16px 0;
-  }
-
-  .main-inner {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .sidebar {
-    width: 100%;
-  }
-
-  .sidebar-card {
-    position: static;
   }
 }
 </style>
