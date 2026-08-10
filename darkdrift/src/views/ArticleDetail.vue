@@ -7,6 +7,7 @@ import type { ArticleVO, CommentVO } from '@/types'
 import AppPagination from '@/components/AppPagination.vue'
 import TocSidebar from '@/components/TocSidebar.vue'
 import BackToTop from '@/components/BackToTop.vue'
+import ReadingProgressBar from '@/components/ReadingProgressBar.vue'
 import { renderMarkdown } from '@/utils/markdown'
 import { useTableOfContents } from '@/composables/useTableOfContents'
 
@@ -178,6 +179,8 @@ onMounted(() => {
 
 <template>
   <div class="detail-page">
+    <ReadingProgressBar />
+
     <button class="btn btn-outline btn-sm mb-16" @click="goBack">← 返回列表</button>
 
     <div v-if="error" class="card mb-24 error-box">
