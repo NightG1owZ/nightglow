@@ -24,21 +24,8 @@ function isActive(path: string) {
   return route.path.startsWith(path)
 }
 
-function goLogin() {
-  router.push('/login')
-}
-
-function goRegister() {
-  router.push('/register')
-}
-
 function goManager() {
   router.push('/manager')
-}
-
-async function handleLogout() {
-  await userStore.logout()
-  router.push('/')
 }
 </script>
 
@@ -62,21 +49,14 @@ async function handleLogout() {
       </nav>
 
       <div class="user-area">
-        <template v-if="isLoggedIn">
-          <button v-if="canManage" class="btn btn-primary btn-sm" @click="goManager">
-            管理
-          </button>
-          <div class="user-info">
-            <img v-if="avatar" :src="avatar" class="avatar" alt="avatar" />
-            <div v-else class="avatar-fallback">{{ nickname.slice(0, 1) }}</div>
-            <span class="user-nickname">{{ nickname }}</span>
-          </div>
-          <button class="btn btn-outline btn-sm" @click="handleLogout">退出</button>
-        </template>
-        <template v-else>
-          <button class="btn btn-outline btn-sm" @click="goLogin">登录</button>
-          <button class="btn btn-primary btn-sm" @click="goRegister">注册</button>
-        </template>
+        <button v-if="isLoggedIn && canManage" class="btn btn-primary btn-sm" @click="goManager">
+          管理
+        </button>
+        <div v-if="isLoggedIn" class="user-info">
+          <img v-if="avatar" :src="avatar" class="avatar" alt="avatar" />
+          <div v-else class="avatar-fallback">{{ nickname.slice(0, 1) }}</div>
+          <span class="user-nickname">{{ nickname }}</span>
+        </div>
       </div>
     </div>
   </header>
