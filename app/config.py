@@ -26,6 +26,10 @@ class Settings(BaseSettings):
 
     password_salt: str
 
+    # 微信开放平台「网站应用」扫码登录（可选，未配置则关闭微信登录）
+    wechat_app_id: str = ""
+    wechat_app_secret: str = ""
+
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
         env_file_encoding="utf-8",

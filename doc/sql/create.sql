@@ -13,22 +13,30 @@ USE NIGHTGLOW;
 
 -- ============================================
 -- 1. 用户表
--- 管理后台登录用户
+-- 管理后台登录用户，支持账号密码与微信扫码登录
 -- ============================================
 
 CREATE TABLE blog_user (
-    id                  BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
-    username            VARCHAR(50) NOT NULL COMMENT '用户名',
-    PASSWORD            VARCHAR(255) NOT NULL COMMENT '密码密文',
-    nickname            VARCHAR(50) COMMENT '昵称',
-    avatar              VARCHAR(500) COMMENT '头像地址',
-    email               VARCHAR(100) COMMENT '邮箱',
-    STATUS              TINYINT DEFAULT 1 COMMENT '状态 1正常 0禁用',
-    last_login_time     DATETIME COMMENT '最后登录时间',
-    create_time         DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time         DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_username (username)
-) COMMENT='博客用户表';
+    id                      BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+    username                VARCHAR(50) COMMENT '用户名(账号密码登录使用，微信扫码注册用户可为空)',
+    PASSWORD                VARCHAR(255) COMMENT '密码密文(账号密码登录使用，微信扫码注册用户可为空)',
+    nickname                VARCHAR(50) COMMENT '昵称',
+    avatar                  VARCHAR(500) COMMENT '头像地址',
+    email                   VARCHAR(100) COMMENT '邮箱',
+    openid                  VARCHAR(64) COMMENT '微信唯一标识openid',
+    unionid                 VARCHAR(64) COMMENT '微信开放平台unionid(同一开放平台下唯一)',
+    wechat_nickname         VARCHAR(100) COMMENT '微信昵称',
+    wechat_avatar           VARCHAR(500) COMMENT '微信头像',
+    wechat_login_status     TINYINT DEFAULT 0 COMMENT '微信扫码登录状态 1已登录 0未登录',
+    last_wechat_login_time  DATETIME COMMENT '微信最后登录时间',
+    STATUS                  TINYINT DEFAULT 1 COMMENT '状态 1正常 0禁用',
+    last_login_time         DATETIME COMMENT '最后登录时间',
+    create_time             DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time             DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_username (username),
+    UNIQUE KEY uk_openid (openid),
+    UNIQUE KEY uk_unionid (unionid)
+) COMMENT='博客用户表(支持账号密码与微信扫码登录)';
 
 
 -- ============================================
@@ -49,17 +57,21 @@ CREATE TABLE blog_category (
 
 -- ============================================
 -- 3. 标签表
+-- 支持父子层级，树形展示
 -- ============================================
 
 CREATE TABLE blog_tag (
     id                  BIGINT PRIMARY KEY AUTO_INCREMENT,
     NAME                VARCHAR(50) NOT NULL COMMENT '标签名称',
     color               VARCHAR(20) COMMENT '标签颜色',
+    parent_id           BIGINT DEFAULT 0 COMMENT '父标签ID，0表示顶级标签',
+    level               TINYINT DEFAULT 1 COMMENT '标签层级深度，1为顶级标签',
     article_count       INT DEFAULT 0 COMMENT '文章数量',
     create_time         DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time         DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_tag_name (NAME)
-) COMMENT='文章标签表';
+    UNIQUE KEY uk_tag_name (NAME),
+    KEY idx_parent_id (parent_id)
+) COMMENT='文章标签表(支持父子层级树形展示)';
 
 
 -- ============================================
@@ -206,18 +218,3 @@ CREATE TABLE blog_operation_log (
     create_time         DATETIME DEFAULT CURRENT_TIMESTAMP
 ) COMMENT='后台操作日志表';
 
-
--- ============================================
--- 初始化管理员
--- 密码请替换为 BCrypt 加密值
--- ============================================
-
-INSERT INTO blog_user (
-    username,
-    PASSWORD,
-    nickname
-) VALUES (
-    'admin',
-    '$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    '管理员'
-);

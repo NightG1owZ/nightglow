@@ -4,6 +4,7 @@ from typing import Optional, Tuple, List, Any, Dict
 from databases import Database
 from sqlalchemy import select, func, and_, or_, insert, update, delete
 
+from app.config import settings
 from app.constants.user import UserConstant
 from app.exceptions import throw_if, ErrorCode
 from app.models.user import User
@@ -12,6 +13,7 @@ from app.schemas.user import (
     UserUpdateRequest, UserQueryRequest, UserVO, LoginUserVO, UserLoginVO,
 )
 from app.utils.password import encrypt_password, verify_password
+from app.utils.wechat import get_access_token, get_user_info
 
 
 def _row_to_dict(row) -> Dict[str, Any]:
@@ -69,6 +71,64 @@ class UserService:
             avatar=user.get("avatar"),
         )
         return user["id"], login_vo
+
+    async def wechat_login(self, code: str) -> Tuple[int, UserLoginVO]:
+        """微信扫码登录：用 code 换取 openid 与用户信息，未注册则自动注册并登录"""
+        token_data = await get_access_token(settings.wechat_app_id, settings.wechat_app_secret, code)
+        throw_if(token_data.get("errcode"), ErrorCode.OPERATION_ERROR, token_data.get("errmsg") or "微信授权失败")
+
+        openid = token_data.get("openid")
+        throw_if(not openid, ErrorCode.OPERATION_ERROR, "获取微信身份失败")
+
+        unionid = token_data.get("unionid")
+        wechat_nickname = None
+        wechat_avatar = None
+        access_token = token_data.get("access_token")
+        if access_token:
+            userinfo = await get_user_info(access_token, openid)
+            if not userinfo.get("errcode"):
+                wechat_nickname = userinfo.get("nickname")
+                wechat_avatar = userinfo.get("headimgurl")
+                unionid = unionid or userinfo.get("unionid")
+
+        now = datetime.now()
+        row = await self.db.fetch_one(select(User).where(User.openid == openid))
+        if row:
+            user_id = dict(row)["id"]
+            await self.db.execute(
+                update(User).where(User.id == user_id).values(
+                    unionid=unionid,
+                    wechat_nickname=wechat_nickname,
+                    wechat_avatar=wechat_avatar,
+                    wechat_login_status=1,
+                    last_wechat_login_time=now,
+                )
+            )
+        else:
+            user_id = await self.db.execute(
+                insert(User).values(
+                    username=None,
+                    password=None,
+                    nickname=wechat_nickname,
+                    avatar=wechat_avatar,
+                    openid=openid,
+                    unionid=unionid,
+                    wechat_nickname=wechat_nickname,
+                    wechat_avatar=wechat_avatar,
+                    wechat_login_status=1,
+                    last_wechat_login_time=now,
+                    status=UserConstant.STATUS_NORMAL,
+                )
+            )
+
+        user = dict(await self._get_row(user_id))
+        login_vo = UserLoginVO(
+            id=user["id"],
+            username=user.get("username"),
+            nickname=user.get("nickname") or user.get("wechat_nickname"),
+            avatar=user.get("avatar") or user.get("wechat_avatar"),
+        )
+        return user_id, login_vo
 
     async def get_login_user_vo(self, user_id: int) -> LoginUserVO:
         row = await self._get_row(user_id)

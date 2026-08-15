@@ -3,8 +3,9 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { addArticle, updateArticle, getArticle } from '@/api/article'
 import { listCategory } from '@/api/category'
-import { listTag } from '@/api/tag'
-import type { CategoryVO, TagVO } from '@/types'
+import { getTagTree } from '@/api/tag'
+import { flattenTagTree } from '@/utils/tree'
+import type { CategoryVO, TagTreeVO } from '@/types'
 
 const props = defineProps<{
   /** 传入则进入编辑模式 */
@@ -21,7 +22,8 @@ const emit = defineEmits<{
 const router = useRouter()
 
 const categories = ref<CategoryVO[]>([])
-const tags = ref<TagVO[]>([])
+const tagTree = ref<TagTreeVO[]>([])
+const tagOptions = computed(() => flattenTagTree(tagTree.value))
 
 const isEdit = computed(() => props.articleId !== undefined && props.articleId > 0)
 
@@ -55,12 +57,12 @@ const pageTitle = computed(() => (isEdit.value ? '编辑文章' : '新增文章'
 
 async function loadOptions() {
   try {
-    const [catRes, tagRes] = await Promise.all([
+    const [catRes, treeRes] = await Promise.all([
       listCategory({ current: 1, pageSize: 100 }),
-      listTag({ current: 1, pageSize: 100 }),
+      getTagTree(),
     ])
     categories.value = catRes.records || []
-    tags.value = tagRes.records || []
+    tagTree.value = treeRes || []
   } catch {
     // 选项加载失败不阻塞表单
   }
@@ -286,18 +288,21 @@ onMounted(() => {
 
       <div class="form-item">
         <label class="form-label">标签</label>
-        <div v-if="tags.length === 0" class="empty-tags">暂无标签可选</div>
-        <div v-else class="tag-picker">
-          <button
-            v-for="t in tags"
-            :key="t.id"
-            type="button"
-            class="tag-chip"
-            :class="{ active: form.tagIds.includes(t.id) }"
-            @click="toggleTag(t.id)"
+        <div v-if="tagOptions.length === 0" class="empty-tags">暂无标签可选</div>
+        <div v-else class="tag-picker tree">
+          <label
+            v-for="node in tagOptions"
+            :key="node.tag.id"
+            class="tag-check"
+            :style="{ paddingLeft: `${node.depth * 20}px` }"
           >
-            {{ t.name }}
-          </button>
+            <input
+              type="checkbox"
+              :checked="form.tagIds.includes(node.tag.id)"
+              @change="toggleTag(node.tag.id)"
+            />
+            <span class="tag-label">{{ node.tag.name }}</span>
+          </label>
         </div>
       </div>
 
@@ -432,6 +437,37 @@ onMounted(() => {
 .empty-tags {
   font-size: 13px;
   color: var(--text-tertiary);
+}
+
+.tag-picker.tree {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tag-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.tag-check:hover {
+  background: var(--bg-subtle);
+}
+
+.tag-check input {
+  cursor: pointer;
+}
+
+.tag-label {
+  flex: 1;
 }
 
 .content-editor {

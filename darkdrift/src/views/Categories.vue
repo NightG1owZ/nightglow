@@ -1,32 +1,52 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import AppPagination from '@/components/AppPagination.vue'
-import { listCategory } from '@/api/category'
-import { listArticle } from '@/api/article'
-import type { CategoryVO } from '@/types'
+import { ref, onMounted, computed } from 'vue'
+import { getTagTree } from '@/api/tag'
+import type { TagTreeVO, TagArticleVO } from '@/types'
 
-const router = useRouter()
-
-const categories = ref<CategoryVO[]>([])
+const tree = ref<TagTreeVO[]>([])
 const loading = ref(false)
 const error = ref('')
-const current = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
+const expandedIds = ref<number[]>([])
+
+type DisplayEntry =
+  | { type: 'tag'; tag: TagTreeVO; depth: number }
+  | { type: 'article'; article: TagArticleVO; depth: number }
+
+const total = computed(() => {
+  let count = 0
+  const walk = (nodes: TagTreeVO[]) => {
+    for (const n of nodes) {
+      count += 1
+      if (n.children.length) walk(n.children)
+    }
+  }
+  walk(tree.value)
+  return count
+})
+
+// 按展开状态展平为可见行：标签节点 + 其下关联的文章条目
+const entries = computed<DisplayEntry[]>(() => {
+  const result: DisplayEntry[] = []
+  const walk = (nodes: TagTreeVO[], depth: number) => {
+    for (const n of nodes) {
+      result.push({ type: 'tag', tag: n, depth })
+      if (expandedIds.value.includes(n.id)) {
+        for (const a of n.articles) {
+          result.push({ type: 'article', article: a, depth: depth + 1 })
+        }
+        if (n.children.length) walk(n.children, depth + 1)
+      }
+    }
+  }
+  walk(tree.value, 0)
+  return result
+})
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
-    const res = await listCategory({
-      current: current.value,
-      pageSize: pageSize.value,
-      sortField: 'sort',
-      sortOrder: 'ascend',
-    })
-    categories.value = res.records || []
-    total.value = res.total || 0
+    tree.value = await getTagTree()
   } catch (e: any) {
     error.value = e?.message || '加载失败'
   } finally {
@@ -34,11 +54,36 @@ async function load() {
   }
 }
 
-function goCategoryArticles(categoryId: number, categoryName: string) {
-  router.push({
-    path: '/',
-    query: { categoryId, keyword: '' },
-  })
+function isExpanded(id: number) {
+  return expandedIds.value.includes(id)
+}
+
+function toggle(id: number) {
+  const i = expandedIds.value.indexOf(id)
+  if (i >= 0) expandedIds.value.splice(i, 1)
+  else expandedIds.value.push(id)
+}
+
+function entryKey(entry: DisplayEntry) {
+  return entry.type === 'tag' ? `tag-${entry.tag.id}` : `article-${entry.article.id}`
+}
+
+function formatDate(s?: string) {
+  if (!s) return ''
+  const d = new Date(s)
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const TAG_PALETTE = ['#4a90d9', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#8e6ddc']
+
+function tagStyle(tag: TagTreeVO) {
+  const color = tag.color || TAG_PALETTE[(tag.level - 1) % TAG_PALETTE.length]
+  return {
+    background: `${color}22`,
+    color,
+    borderColor: `${color}66`,
+  }
 }
 
 onMounted(load)
@@ -47,8 +92,8 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="page-header card mb-24">
-      <h1 class="page-title">📁 文章分类</h1>
-      <p class="page-subtitle">共 {{ total }} 个分类，浏览感兴趣的主题</p>
+      <h1 class="page-title">🗂️ 文章分类</h1>
+      <p class="page-subtitle">共 {{ total }} 个标签，展开查看标签层级及其关联文章</p>
     </div>
 
     <div v-if="error" class="card mb-24 error-box">
@@ -60,34 +105,43 @@ onMounted(load)
       <div class="loading">加载中...</div>
     </div>
 
-    <div v-else-if="categories.length === 0" class="card">
-      <div class="empty">暂无分类</div>
+    <div v-else-if="tree.length === 0" class="card">
+      <div class="empty">暂无标签</div>
     </div>
 
-    <div v-else class="category-grid">
-      <div
-        v-for="c in categories"
-        :key="c.id"
-        class="card category-card"
-        @click="goCategoryArticles(c.id, c.name)"
-      >
-        <div class="category-header flex justify-between items-center">
-          <h3 class="category-name">{{ c.name }}</h3>
-          <span class="tag">{{ c.article_count }} 篇</span>
-        </div>
-        <p v-if="c.description" class="category-desc mt-8">{{ c.description }}</p>
-        <div class="category-footer mt-16">
-          <span>排序：{{ c.sort }}</span>
-          <span class="view-link">查看文章 →</span>
+    <div v-else class="card">
+      <div class="tag-tree">
+        <div
+          v-for="entry in entries"
+          :key="entryKey(entry)"
+          class="tree-row"
+          :style="{ paddingLeft: `${12 + entry.depth * 20}px` }"
+        >
+          <!-- 标签节点 -->
+          <div
+            v-if="entry.type === 'tag'"
+            class="tag-row"
+            role="button"
+            :aria-expanded="isExpanded(entry.tag.id)"
+            @click="toggle(entry.tag.id)"
+          >
+            <span class="toggle">{{ isExpanded(entry.tag.id) ? '▾' : '▸' }}</span>
+            <span class="tag-name" :style="tagStyle(entry.tag)"># {{ entry.tag.name }}</span>
+            <span class="tag-count">{{ entry.tag.articleCount }} 篇</span>
+          </div>
+
+          <!-- 关联文章条目 -->
+          <router-link
+            v-else
+            :to="`/article/${entry.article.id}`"
+            class="article-row"
+            :title="entry.article.title"
+          >
+            <span class="article-title">{{ entry.article.title }}</span>
+            <span class="article-date">{{ formatDate(entry.article.publishTime || entry.article.createTime) }}</span>
+          </router-link>
         </div>
       </div>
-
-      <AppPagination
-        :current="current"
-        :page-size="pageSize"
-        :total="total"
-        @change="(p) => { current = p; load() }"
-      />
     </div>
   </div>
 </template>
@@ -105,49 +159,85 @@ onMounted(load)
   margin-top: 4px;
 }
 
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.category-card {
-  cursor: pointer;
+.tag-tree {
   display: flex;
   flex-direction: column;
 }
 
-.category-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+.tree-row {
+  border-bottom: 1px solid var(--border-lighter);
 }
 
-.category-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
+.tree-row:last-child {
+  border-bottom: none;
 }
 
-.category-desc {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  flex: 1;
-}
-
-.category-footer {
+.tag-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.tag-row:hover .tag-name {
+  opacity: 0.8;
+}
+
+.toggle {
+  width: 22px;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  text-align: center;
+}
+
+.tag-name {
+  display: inline-block;
+  padding: 3px 12px;
+  border: 1px solid;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.tag-count {
   font-size: 12px;
   color: var(--text-tertiary);
-  padding-top: 12px;
-  border-top: 1px solid var(--border-lighter);
+  flex-shrink: 0;
 }
 
-.view-link {
-  color: var(--accent);
-  font-weight: 500;
+.article-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  margin: 0 0 0 22px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.article-row:hover {
+  background: var(--bg-subtle);
+  text-decoration: none;
+}
+
+.article-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.article-date {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 
 .loading,

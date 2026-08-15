@@ -41,10 +41,11 @@ async def add(
     request: CommentAddRequest,
     req: Request,
     db: Database = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    """新增评论（自动采集 IP 与 User-Agent）"""
+    """新增评论（登录后评论，自动采集 IP、User-Agent 与用户身份）"""
     service = CommentService(db)
-    comment_id = await service.add(request, ip=get_client_ip(req), user_agent=get_user_agent(req))
+    comment_id = await service.add(request, current_user, ip=get_client_ip(req), user_agent=get_user_agent(req))
     return BaseResponse.success(data=comment_id, message="新增成功")
 
 

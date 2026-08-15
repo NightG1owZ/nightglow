@@ -5,6 +5,7 @@ from sqlalchemy import select, func, and_, insert, update, delete
 
 from app.exceptions import throw_if, ErrorCode
 from app.models.comment import Comment
+from app.models.user import User
 from app.schemas.comment import (
     CommentAddRequest, CommentUpdateRequest, CommentQueryRequest, CommentVO,
 )
@@ -23,14 +24,14 @@ class CommentService:
         row = await self._get_row(comment_id)
         return CommentVO(**dict(row))
 
-    async def add(self, request: CommentAddRequest, ip: Optional[str], user_agent: Optional[str]) -> int:
+    async def add(self, request: CommentAddRequest, current_user: User, ip: Optional[str], user_agent: Optional[str]) -> int:
         comment_id = await self.db.execute(
             insert(Comment).values(
                 article_id=request.article_id,
                 parent_id=request.parent_id,
-                nickname=request.nickname,
-                email=request.email,
-                avatar=request.avatar,
+                nickname=current_user.nickname or current_user.username or "用户",
+                email=current_user.email,
+                avatar=current_user.avatar,
                 content=request.content,
                 ip=ip,
                 user_agent=user_agent,

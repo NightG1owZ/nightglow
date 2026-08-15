@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { LoginUserVO } from '@/types'
-import { login as apiLogin, logout as apiLogout, getCurrentUser } from '@/api/user'
+import { login as apiLogin, logout as apiLogout, getCurrentUser, wechatLogin as apiWechatLogin } from '@/api/user'
 import type { UserLoginRequest } from '@/types'
 
 const STORAGE_KEY = 'blog_user'
@@ -43,6 +43,17 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function loginWithWechat(code: string) {
+    loading.value = true
+    try {
+      const res = await apiWechatLogin({ code })
+      saveUser(res)
+      return res
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function logout() {
     try {
       await apiLogout()
@@ -69,6 +80,7 @@ export const useUserStore = defineStore('user', () => {
     nickname,
     avatar,
     login,
+    loginWithWechat,
     logout,
     fetchCurrentUser,
   }

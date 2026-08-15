@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from databases import Database
 
@@ -6,11 +8,18 @@ from app.deps import get_current_user
 from app.models.user import User
 from app.schemas.common import BaseResponse, PageResponse, BatchDeleteRequest
 from app.schemas.tag import (
-    TagAddRequest, TagUpdateRequest, TagQueryRequest, TagVO,
+    TagAddRequest, TagUpdateRequest, TagQueryRequest, TagVO, TagTreeVO,
 )
 from app.services.tag_service import TagService
 
 router = APIRouter(prefix="/tag", tags=["标签管理"])
+
+
+@router.get("/tree", response_model=BaseResponse[List[TagTreeVO]])
+async def tree(db: Database = Depends(get_db)):
+    """查询标签层级树（公开，供 /categories 页面使用）"""
+    service = TagService(db)
+    return BaseResponse.success(data=await service.tree())
 
 
 @router.post("/list", response_model=BaseResponse[PageResponse[TagVO]])

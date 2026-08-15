@@ -8,6 +8,7 @@ from app.exceptions import throw_if, ErrorCode
 from app.models.article import Article
 from app.models.article_tag import ArticleTag
 from app.models.article_view import ArticleView
+from app.models.tag import Tag
 from app.schemas.article import (
     ArticleAddRequest, ArticleUpdateRequest, ArticleQueryRequest, ArticleVO,
 )
@@ -89,12 +90,30 @@ class ArticleService:
         result = await self.db.execute(delete(Article).where(Article.id.in_(ids)))
         return result
 
+    async def _collect_tag_with_descendants(self, tag_id: int) -> List[int]:
+        """收集指定标签及其所有子孙标签 ID（用于按标签树过滤文章）"""
+        rows = await self.db.fetch_all(select(Tag.id, Tag.parent_id))
+        children_map: Dict[int, List[int]] = {}
+        for r in rows:
+            children_map.setdefault(r["parent_id"], []).append(r["id"])
+
+        result: List[int] = []
+        stack = [tag_id]
+        while stack:
+            pid = stack.pop()
+            result.append(pid)
+            stack.extend(children_map.get(pid, []))
+        return result
+
     async def page(self, request: ArticleQueryRequest) -> Tuple[List[ArticleVO], int]:
         conditions = []
         if request.title:
             conditions.append(Article.title.like(f"%{request.title}%"))
         if request.category_id is not None:
             conditions.append(Article.category_id == request.category_id)
+        if request.tag_id is not None:
+            tag_ids = await self._collect_tag_with_descendants(request.tag_id)
+            conditions.append(Article.id.in_(select(ArticleTag.article_id).where(ArticleTag.tag_id.in_(tag_ids))))
         if request.status is not None:
             conditions.append(Article.status == request.status)
         if request.is_top is not None:

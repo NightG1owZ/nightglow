@@ -12,12 +12,13 @@ import ReadingProgressBar from '@/components/ReadingProgressBar.vue'
 import { renderMarkdown } from '@/utils/markdown'
 import { useTableOfContents } from '@/composables/useTableOfContents'
 import { useUserStore } from '@/stores/user'
+import { startWechatLogin } from '@/utils/wechat'
 
 const route = useRoute()
 const router = useRouter()
 
 const userStore = useUserStore()
-const { isLoggedIn } = storeToRefs(userStore)
+const { isLoggedIn, nickname } = storeToRefs(userStore)
 
 const articleId = computed(() => parseInt(String(route.params.id), 10) || 0)
 
@@ -70,6 +71,8 @@ const commentForm = reactive({
 const commentSubmitting = ref(false)
 const commentError = ref('')
 const commentTextareaRef = ref<HTMLTextAreaElement | null>(null)
+const wechatLoading = ref(false)
+const wechatError = ref('')
 
 // 评论编辑器标签页：write = 编辑，preview = 预览
 const commentTab = ref<'write' | 'preview'>('write')
@@ -186,7 +189,6 @@ async function submitComment() {
   try {
     await addComment({
       articleId: articleId.value,
-      nickname: '匿名用户',
       content: commentForm.content.trim(),
     })
     commentForm.content = ''
@@ -220,11 +222,23 @@ function goBack() {
 }
 
 function goLogin() {
-  router.push('/login')
+  router.push({ path: '/login', query: { redirect: route.fullPath } })
 }
 
 function goRegister() {
-  router.push('/register')
+  router.push({ path: '/register', query: { redirect: route.fullPath } })
+}
+
+async function handleWechatLogin() {
+  wechatError.value = ''
+  wechatLoading.value = true
+  try {
+    await startWechatLogin(route.fullPath)
+  } catch (e: any) {
+    wechatError.value = e?.message || '微信登录失败'
+  } finally {
+    wechatLoading.value = false
+  }
 }
 
 async function handleLogout() {
@@ -293,71 +307,89 @@ onMounted(() => {
 
           <section class="mb-24">
             <div class="composer">
-              <div class="composer-tabs" role="tablist" aria-label="评论编辑模式">
-                <button
-                  type="button"
-                  role="tab"
-                  class="composer-tab"
-                  :class="{ active: commentTab === 'write' }"
-                  :aria-selected="commentTab === 'write'"
-                  @click="commentTab = 'write'"
-                >
-                  Write
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  class="composer-tab"
-                  :class="{ active: commentTab === 'preview' }"
-                  :aria-selected="commentTab === 'preview'"
-                  @click="commentTab = 'preview'"
-                >
-                  Preview
-                </button>
-              </div>
-
-              <div v-if="commentError" class="composer-error">{{ commentError }}</div>
-
-              <div v-if="commentTab === 'write'" class="composer-body">
-                <div class="emoji-toolbar" role="toolbar" aria-label="插入表情">
+              <!-- 未登录：注册 / 登录 / 微信登录入口 -->
+              <div v-if="!isLoggedIn" class="composer-login">
+                <p class="login-title">登录后参与评论</p>
+                <p class="login-hint">支持账号密码或微信扫码一键登录</p>
+                <div class="login-actions">
+                  <button type="button" class="btn btn-outline btn-sm" @click="goLogin">账号登录</button>
+                  <button type="button" class="btn btn-outline btn-sm" @click="goRegister">注册账号</button>
                   <button
-                    v-for="e in reactionEmojis"
-                    :key="e.char"
                     type="button"
-                    class="emoji-quick-btn"
-                    :title="e.name"
-                    :aria-label="'插入 ' + e.name"
-                    @click="insertEmoji(e.char)"
+                    class="btn btn-primary btn-sm"
+                    :disabled="wechatLoading"
+                    @click="handleWechatLogin"
                   >
-                    {{ e.char }}
+                    {{ wechatLoading ? '跳转中...' : '微信登录' }}
                   </button>
                 </div>
-                <textarea
-                  ref="commentTextareaRef"
-                  v-model="commentForm.content"
-                  class="composer-textarea"
-                  placeholder="写下你的评论...（支持 Markdown）"
-                ></textarea>
+                <div v-if="wechatError" class="composer-error">{{ wechatError }}</div>
               </div>
 
-              <div v-else class="composer-body composer-preview">
-                <div v-if="commentForm.content.trim()" class="markdown-body" v-html="commentPreview"></div>
-                <div v-else class="preview-empty">Nothing to preview</div>
-              </div>
-
-              <div class="composer-footer">
-                <span class="composer-hint">Styling with Markdown is supported</span>
-                <div class="composer-actions">
-                  <template v-if="!isLoggedIn">
-                    <button type="button" class="btn btn-outline btn-sm" @click="goLogin">Sign in</button>
-                    <button type="button" class="btn btn-outline btn-sm" @click="goRegister">Sign up</button>
-                  </template>
-                  <button v-else type="button" class="btn btn-outline btn-sm" @click="handleLogout">Sign out</button>
-                  <button class="btn btn-primary btn-sm" :disabled="commentSubmitting" @click="submitComment">
-                    {{ commentSubmitting ? '提交中...' : '发表评论' }}
+              <!-- 已登录：评论编辑器 -->
+              <template v-else>
+                <div class="composer-tabs" role="tablist" aria-label="评论编辑模式">
+                  <button
+                    type="button"
+                    role="tab"
+                    class="composer-tab"
+                    :class="{ active: commentTab === 'write' }"
+                    :aria-selected="commentTab === 'write'"
+                    @click="commentTab = 'write'"
+                  >
+                    Write
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    class="composer-tab"
+                    :class="{ active: commentTab === 'preview' }"
+                    :aria-selected="commentTab === 'preview'"
+                    @click="commentTab = 'preview'"
+                  >
+                    Preview
                   </button>
                 </div>
-              </div>
+
+                <div v-if="commentError" class="composer-error">{{ commentError }}</div>
+
+                <div v-if="commentTab === 'write'" class="composer-body">
+                  <div class="emoji-toolbar" role="toolbar" aria-label="插入表情">
+                    <button
+                      v-for="e in reactionEmojis"
+                      :key="e.char"
+                      type="button"
+                      class="emoji-quick-btn"
+                      :title="e.name"
+                      :aria-label="'插入 ' + e.name"
+                      @click="insertEmoji(e.char)"
+                    >
+                      {{ e.char }}
+                    </button>
+                  </div>
+                  <textarea
+                    ref="commentTextareaRef"
+                    v-model="commentForm.content"
+                    class="composer-textarea"
+                    placeholder="写下你的评论...（支持 Markdown）"
+                  ></textarea>
+                </div>
+
+                <div v-else class="composer-body composer-preview">
+                  <div v-if="commentForm.content.trim()" class="markdown-body" v-html="commentPreview"></div>
+                  <div v-else class="preview-empty">Nothing to preview</div>
+                </div>
+
+                <div class="composer-footer">
+                  <span class="composer-hint">以 {{ nickname }} 身份评论 · Styling with Markdown is supported</span>
+                  <div class="composer-actions">
+                    <button type="button" class="btn btn-outline btn-sm" @click="handleLogout">退出登录</button>
+                    <button class="btn btn-primary btn-sm" :disabled="commentSubmitting" @click="submitComment">
+                      {{ commentSubmitting ? '提交中...' : '发表评论' }}
+                    </button>
+                  </div>
+                </div>
+              </template>
             </div>
           </section>
 
@@ -944,6 +976,32 @@ onMounted(() => {
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+}
+
+.composer-login {
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.login-hint {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.login-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .composer-tabs {

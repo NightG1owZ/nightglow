@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, Response, Request
 from databases import Database
 
+from app.config import settings
 from app.database import get_db
 from app.deps import get_current_user, create_session, clear_session
+from app.exceptions import throw_if, ErrorCode
 from app.models.user import User
 from app.schemas.common import BaseResponse, PageResponse, BatchDeleteRequest
 from app.schemas.user import (
-    UserRegisterRequest, UserLoginRequest, UserAddRequest,
-    UserUpdateRequest, UserQueryRequest, UserVO, LoginUserVO, UserLoginVO,
+    UserRegisterRequest, UserLoginRequest, WechatLoginRequest, WechatConfigVO,
+    UserAddRequest, UserUpdateRequest, UserQueryRequest, UserVO, LoginUserVO, UserLoginVO,
 )
 from app.services.user_service import UserService
 
@@ -46,6 +48,27 @@ async def logout(
     """退出登录"""
     await clear_session(request, response)
     return BaseResponse.success(data=True, message="已退出登录")
+
+
+@router.get("/wechat/config", response_model=BaseResponse[WechatConfigVO])
+async def wechat_config():
+    """获取微信登录配置（appId 非敏感，enabled 标识是否已配置）"""
+    enabled = bool(settings.wechat_app_id and settings.wechat_app_secret)
+    return BaseResponse.success(data=WechatConfigVO(enabled=enabled, app_id=settings.wechat_app_id))
+
+
+@router.post("/wechat/login", response_model=BaseResponse[UserLoginVO])
+async def wechat_login(
+    request: WechatLoginRequest,
+    response: Response,
+    db: Database = Depends(get_db),
+):
+    """微信扫码登录（未注册自动注册并建立会话）"""
+    throw_if(not (settings.wechat_app_id and settings.wechat_app_secret), ErrorCode.OPERATION_ERROR, "微信登录未配置")
+    service = UserService(db)
+    user_id, login_vo = await service.wechat_login(request.code)
+    await create_session(response, user_id, {"username": login_vo.username})
+    return BaseResponse.success(data=login_vo, message="登录成功")
 
 
 @router.get("/current", response_model=BaseResponse[LoginUserVO])

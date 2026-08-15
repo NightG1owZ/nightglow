@@ -20,6 +20,7 @@ const pageSize = ref(10)
 const total = ref(0)
 const keyword = ref('')
 const categoryId = ref<number | undefined>()
+const tagId = ref<number | undefined>()
 
 // 实时搜索防抖配置
 const DEBOUNCE_DELAY = 400
@@ -33,6 +34,7 @@ function readQueryParams() {
   if (q.size) pageSize.value = parseInt(String(q.size), 10) || 10
   if (q.keyword) keyword.value = String(q.keyword)
   if (q.categoryId) categoryId.value = parseInt(String(q.categoryId), 10) || undefined
+  if (q.tagId) tagId.value = parseInt(String(q.tagId), 10) || undefined
 }
 
 async function loadCategories() {
@@ -56,6 +58,7 @@ async function loadArticles() {
       pageSize: pageSize.value,
       title: keyword.value || undefined,
       categoryId: categoryId.value,
+      tagId: tagId.value,
       sortField: 'publishTime',
       sortOrder: 'descend',
       status: 1,
@@ -95,6 +98,13 @@ function resetSearch() {
   cancelPendingSearch()
   keyword.value = ''
   categoryId.value = undefined
+  tagId.value = undefined
+  current.value = 1
+  syncUrlAndLoad()
+}
+
+function onSelectTag(id?: number) {
+  tagId.value = id
   current.value = 1
   syncUrlAndLoad()
 }
@@ -124,6 +134,7 @@ function syncUrlAndLoad() {
   if (pageSize.value !== 10) query.size = pageSize.value
   if (keyword.value) query.keyword = keyword.value
   if (categoryId.value) query.categoryId = categoryId.value
+  if (tagId.value) query.tagId = tagId.value
   internalUrlChange = true
   router.replace({ path: '/', query })
   loadArticles()
@@ -228,6 +239,11 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </div>
+    </div>
+
+    <div v-if="tagId !== undefined" class="card mb-16 tag-filter-banner">
+      <span>🏷️ 已按标签筛选</span>
+      <button class="btn btn-outline btn-sm" @click="onSelectTag(undefined)">清除筛选</button>
     </div>
 
     <div v-if="error" class="card mb-24 error-box">
@@ -366,6 +382,15 @@ onBeforeUnmount(() => {
 .category-filter {
   padding-top: 8px;
   border-top: 1px solid var(--border-lighter);
+}
+
+.tag-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .article-item {

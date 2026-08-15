@@ -23,6 +23,20 @@ class UserLoginRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128, description="密码")
 
 
+class WechatLoginRequest(BaseModel):
+    """微信扫码登录请求（code 由前端回调携带）"""
+    code: str = Field(..., description="微信授权临时票据 code")
+
+
+class WechatConfigVO(BaseModel):
+    """微信登录配置视图对象"""
+    enabled: bool
+    app_id: str = Field(alias="appId")
+
+    class Config:
+        populate_by_name = True
+
+
 class UserAddRequest(BaseModel):
     """新增用户请求（管理员）"""
     username: str = Field(..., min_length=4, max_length=50, description="用户名")
@@ -53,7 +67,7 @@ class UserQueryRequest(PageRequest):
 class UserVO(BaseModel):
     """用户视图对象"""
     id: int
-    username: str
+    username: Optional[str] = None
     nickname: Optional[str] = None
     avatar: Optional[str] = None
     email: Optional[str] = None
@@ -69,7 +83,7 @@ class UserVO(BaseModel):
 class LoginUserVO(BaseModel):
     """当前登录用户视图对象"""
     id: int
-    username: str
+    username: Optional[str] = None
     nickname: Optional[str] = None
     avatar: Optional[str] = None
     email: Optional[str] = None
@@ -85,7 +99,7 @@ class LoginUserVO(BaseModel):
 class UserLoginVO(BaseModel):
     """登录返回对象"""
     id: int
-    username: str
+    username: Optional[str] = None
     nickname: Optional[str] = None
     avatar: Optional[str] = None
 

@@ -45,6 +45,7 @@ class ArticleQueryRequest(PageRequest):
     """文章分页查询请求"""
     title: Optional[str] = Field(None, description="文章标题")
     category_id: Optional[int] = Field(None, alias="categoryId", description="分类ID")
+    tag_id: Optional[int] = Field(None, alias="tagId", description="标签ID（含其所有子标签）")
     status: Optional[int] = Field(None, description="状态")
     is_top: Optional[int] = Field(None, alias="isTop", description="是否置顶")
 

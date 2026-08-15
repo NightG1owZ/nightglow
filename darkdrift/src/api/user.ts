@@ -2,6 +2,8 @@ import { get, post, put, del } from '@/utils/request'
 import type {
   UserLoginRequest,
   UserRegisterRequest,
+  WechatLoginRequest,
+  WechatConfigVO,
   UserAddRequest,
   UserUpdateRequest,
   UserQueryRequest,
@@ -24,6 +26,16 @@ export function register(data: UserRegisterRequest) {
 // 退出登录
 export function logout() {
   return post<number>('/user/logout')
+}
+
+// 获取微信登录配置
+export function getWechatConfig() {
+  return get<WechatConfigVO>('/user/wechat/config')
+}
+
+// 微信扫码登录
+export function wechatLogin(data: WechatLoginRequest) {
+  return post<LoginUserVO>('/user/wechat/login', data)
 }
 
 // 获取当前登录用户

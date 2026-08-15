@@ -61,7 +61,7 @@ export interface UserQueryRequest extends PageQueryRequest {
 
 export interface UserVO {
   id: number
-  username: string
+  username?: string
   nickname?: string
   avatar?: string
   email?: string
@@ -73,9 +73,18 @@ export interface UserVO {
 
 export interface LoginUserVO {
   id: number
-  username: string
+  username?: string
   nickname?: string
   avatar?: string
+}
+
+export interface WechatLoginRequest {
+  code: string
+}
+
+export interface WechatConfigVO {
+  enabled: boolean
+  appId: string
 }
 
 // ========== 分类模块 ==========
@@ -110,6 +119,7 @@ export interface CategoryVO {
 export interface TagAddRequest {
   name: string
   color?: string
+  parentId?: number
 }
 
 export interface TagUpdateRequest {
@@ -126,9 +136,31 @@ export interface TagVO {
   id: number
   name: string
   color?: string
+  parentId: number
+  level: number
   article_count: number
   createTime: string
   updateTime: string
+}
+
+export interface TagArticleVO {
+  id: number
+  title: string
+  summary?: string
+  cover?: string
+  publishTime?: string
+  createTime: string
+}
+
+export interface TagTreeVO {
+  id: number
+  name: string
+  color?: string
+  parentId: number
+  level: number
+  articleCount: number
+  articles: TagArticleVO[]
+  children: TagTreeVO[]
 }
 
 // ========== 文章模块 ==========
@@ -162,6 +194,7 @@ export interface ArticleUpdateRequest {
 export interface ArticleQueryRequest extends PageQueryRequest {
   title?: string
   categoryId?: number
+  tagId?: number
   status?: number
   isTop?: number
 }
@@ -248,9 +281,6 @@ export interface ArticleTagVO {
 export interface CommentAddRequest {
   articleId: number
   parentId?: number
-  nickname: string
-  email?: string
-  avatar?: string
   content: string
 }
 

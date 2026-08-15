@@ -9,6 +9,12 @@
 
       <div class="about-section contact">
         <p class="about-content">
+          Github: https://github.com/NightG1owZ
+        </p>
+        <p class="about-content">
+          Gitee: https://gitee.com/infnoon
+        </p>
+        <p class="about-content">
           微信公众号：无限长的下午
         </p>
         <p class="about-content">

@@ -66,6 +66,12 @@ const router = createRouter({
       meta: { title: '注册', plain: true },
     },
     {
+      path: '/wechat/callback',
+      name: 'WechatCallback',
+      component: () => import('@/views/WechatCallback.vue'),
+      meta: { title: '微信登录', plain: true },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('@/views/NotFound.vue'),

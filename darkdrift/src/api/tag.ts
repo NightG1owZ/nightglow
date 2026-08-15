@@ -4,9 +4,15 @@ import type {
   TagUpdateRequest,
   TagQueryRequest,
   TagVO,
+  TagTreeVO,
   PageResponse,
   BatchDeleteRequest,
 } from '@/types'
+
+// 查询标签层级树（公开）
+export function getTagTree() {
+  return get<TagTreeVO[]>('/tag/tree')
+}
 
 // 分页查询标签
 export function listTag(data: TagQueryRequest) {

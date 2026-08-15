@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { register } from '@/api/user'
 
 const router = useRouter()
+const route = useRoute()
 
 const form = reactive({
   username: '',
@@ -46,8 +47,12 @@ async function onSubmit() {
       checkPassword: form.checkPassword,
     })
     success.value = '注册成功！即将跳转登录页...'
+    const redirect = route.query.redirect as string | undefined
     setTimeout(() => {
-      router.replace({ path: '/login', query: { username: form.username } })
+      router.replace({
+        path: '/login',
+        query: { username: form.username, ...(redirect ? { redirect } : {}) },
+      })
     }, 1200)
   } catch (e: any) {
     error.value = e?.message || '注册失败'
